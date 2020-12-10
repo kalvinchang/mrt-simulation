@@ -1,6 +1,8 @@
 #include <WiFi.h>
 #include <ArduinoHttpClient.h>
 #include "arduino_secrets.h"
+#include <tinyxml2.h>
+using namespace tinyxml2;
 
 // adapted from https://github.com/CliffLin/TaipeiMRT/blob/master/flask/mrt.py (Flask)
 char serverAddress[] = "ws.metro.taipei";
@@ -45,11 +47,25 @@ void loop() {
   Serial.println(responseStatusCode);
 
   if (responseStatusCode > 0) { //Check for the returning code
-    String response = client.responseBody();
-    Serial.println(response);
+    String responseStr = client.responseBody();
+    Serial.println(responseStr);
 
-    // TODO: parsing response ; modularize
-    // <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><GetNextTrain2Response xmlns="http://tempuri.org/"><GetNextTrain2Result><root station="010" stationname="忠孝復興站" noservice="YES       " ErrStatement="" xmlns=""><Detail flag="0  " priority="510" platform="BL1" stnid="BL10 " tripno="" destination="南港展覽館站" countdown="59:50*    " updatetime="2020-12-09 04:09:36 " nowtime="2020-12-09 04:09:40 " diffsec="4" /><Detail flag="0  " priority="530" platform="BL1" stnid="BL10 " tripno="" destination="頂埔站" countdown="59:50*    " updatetime="2020-12-09 04:09:36 " nowtime="2020-12-09 04:09:40 " diffsec="4" /><Detail flag="0  " priority="535" platform="BL1" stnid="BL10 " tripno="" destination="亞東醫院站" countdown="59:50*    " updatetime="2020-12-09 04:09:36 " nowtime="2020-12-09 04:09:40 " diffsec="4" /><Detail flag="0  " priority="999" platform="BL1" stnid="BL10 " tripno="" destination="昆陽站" countdown="59:50*    " updatetime="2020-12-09 04:09:36 " nowtime="2020-12-09 04:09:40 " diffsec="4" /></root></GetNextTrain2Result></GetNextTrain2Response></soap:Body></soap:Envelope>
+    // add 1 for the NUL terminator
+    char * response = (char *)malloc(responseStr.length() + 1);
+    responseStr.toCharArray(response, responseStr.length() + 1);
+
+    // TODO: modularize
+    XMLDocument document;
+    XMLError err = document.Parse(response);
+    if (err != XML_SUCCESS) {
+      Serial.print("Error parsing response: ");
+      Serial.print(err);
+      return;
+    }
+    Serial.print("Success parsing response");
+
+
+    free(response);
 
 //    xml = r.content
 //		xmltree = ET.ElementTree()
@@ -59,8 +75,8 @@ void loop() {
 //			result.append({'destination':elem.get('destination'),"countdown":elem.get("countdown").replace(" ",'')})
 //		return result
   } else {
-    
-    Serial.println("Error on HTTP request");
+    Serial.println("Error on HTTP request. Status: ");
+    Serial.println(responseStatusCode);
   }
 
   delay(30000);

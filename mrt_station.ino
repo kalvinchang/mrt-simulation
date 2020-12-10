@@ -11,9 +11,11 @@ WiFiClient wifi;
 HttpClient client = HttpClient(wifi, serverAddress, port);
 int status = WL_IDLE_STATUS;
 
+const int APPROACHING_STATION = 30; // seconds
+
 // WiFi code adapted from https://github.com/arduino-libraries/ArduinoHttpClient/blob/master/examples/SimplePost/SimplePost.ino
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(230400);
   
   while (status != WL_CONNECTED) {
     Serial.println("Connecting to WiFi..");
@@ -68,25 +70,46 @@ void loop() {
 
     XMLElement* trainElement = document.FirstChildElement( "soap:Envelope" )->FirstChildElement( "soap:Body" )->FirstChildElement("GetNextTrain2Response")->FirstChildElement("GetNextTrain2Result")->FirstChildElement("root");
 
-    int count = 0;
+    int numTrains = 0;
     for (XMLElement* train = trainElement->FirstChildElement(); train != NULL; train = train->NextSiblingElement())
     {
-        // TODO: grab destination and countdown attributes for each train
-        count++;
-    }
-    Serial.print(count + " trains");
+        // TODO: modularize
+        const char *countdown = "MM:SS";
+        train->QueryStringAttribute("countdown", &countdown);
 
-//    xml = r.content
-//		xmltree = ET.ElementTree()
-//		xmltree = ET.fromstring(xml)
-//		result = []
-//		for elem in xmltree.iter('Detail'):
-//			result.append({'destination':elem.get('destination'),"countdown":elem.get("countdown").replace(" ",'')})
-//		return result
+        int minutes = 0;
+        int seconds = 0;
+        sscanf(countdown, "%d:%d", &minutes, &seconds);
+        
+        seconds += minutes * 60;
+
+        if (seconds < APPROACHING_STATION) {
+          // TODO: check that the train is on the Bannan line
+          
+          Serial.println("train arriving!");
+          // TODO: play music
+          // TODO: human speech: announce that a train is coming and headed toward some destination
+          // TODO: human speech: mind the gap
+          // TODO: doesn't the song last a long time?
+          // TODO: wait 10 seconds for the doors to close (sound an alarm)
+          // TODO: human speech: doors closing
+
+          const char *destination = "OOOOOOO";
+          train->QueryStringAttribute("destination", &destination);
+
+          Serial.println("headed towards");
+          Serial.println(destination);
+        }
+        
+        numTrains++;
+    }
+    Serial.print(numTrains);
+    Serial.println(" trains");
+
   } else {
     Serial.println("Error on HTTP request. Status: ");
     Serial.println(responseStatusCode);
   }
 
-  delay(30000);
+  delay(5000);
 }

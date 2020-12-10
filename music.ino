@@ -12,6 +12,7 @@
 #define A5 880
 #define B5 987.77
 #define C6 1046.5
+#define D6 1174.66
 #define E6 1318.51
 #define A7 3520
 
@@ -48,6 +49,31 @@ void enterStationTune(int speaker) {
     double noteDuration = 1000 / durations[i];
     tone(speaker, notes[i], noteDuration);
     delay(noteDuration * 1.30);
+    noTone(speaker);
+  }
+}
+
+void doorsClosing(int speaker) {
+  // alarm sound
+  double alarm = 4186.01;
+  for (int i = 0; i < 13; i++) {
+    tone(speaker, alarm, 90);
+    delay(90 * 1.30);
+    noTone(speaker);
+  }
+  delay(500);
+  for (int i = 0; i < 13; i++) {
+    tone(speaker, alarm, 90);
+    delay(90 * 1.30);
+    noTone(speaker);
+  }
+
+  delay(1000);
+
+  double doors[5] = {D6, F5, D6, F5, D6};
+  for (int i = 0; i < 5; i++) {
+    tone(speaker, doors[i], 600);
+    delay(600 * 1.30);
     noTone(speaker);
   }
 }

@@ -58,14 +58,23 @@ void loop() {
     XMLDocument document;
     XMLError err = document.Parse(response);
     if (err != XML_SUCCESS) {
-      Serial.print("Error parsing response: ");
-      Serial.print(err);
+      Serial.println("Error parsing response: ");
+      Serial.println(err);
       return;
     }
-    Serial.print("Success parsing response");
-
+    Serial.println("Success parsing response");
 
     free(response);
+
+    XMLElement* trainElement = document.FirstChildElement( "soap:Envelope" )->FirstChildElement( "soap:Body" )->FirstChildElement("GetNextTrain2Response")->FirstChildElement("GetNextTrain2Result")->FirstChildElement("root");
+
+    int count = 0;
+    for (XMLElement* train = trainElement->FirstChildElement(); train != NULL; train = train->NextSiblingElement())
+    {
+        // TODO: grab destination and countdown attributes for each train
+        count++;
+    }
+    Serial.print(count + " trains");
 
 //    xml = r.content
 //		xmltree = ET.ElementTree()

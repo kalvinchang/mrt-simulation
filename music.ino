@@ -16,6 +16,8 @@
 #define E6 1318.51
 #define A7 3520
 
+#include <Tone32.h>
+
 // sheet music from https://www.youtube.com/watch?v=n5XrDwuomoE
 void enterStationTune(int speaker) {
   // each line = 1 measure in 5/4 time
@@ -77,3 +79,5 @@ void doorsClosing(int speaker) {
     noTone(speaker);
   }
 }
+
+// ESP32 does not have tone built in; solution = https://github.com/espressif/arduino-esp32/issues/1720

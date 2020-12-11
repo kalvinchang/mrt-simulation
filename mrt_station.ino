@@ -105,6 +105,7 @@ void loop() {
           // TODO: check that the train is on the Bannan line
           
           Serial.println("train arriving!");
+          digitalWrite(ledPins[curr_station], LOW);
           flicker();
           digitalWrite(ledPins[curr_station], HIGH); // turn light back on
           enterStationTune(speakerPin); // takes 15 seconds
@@ -142,9 +143,10 @@ void loop() {
 }
 
 void flicker() {
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < 10; i++) {
     digitalWrite(ledPins[curr_station], HIGH);
     delay(100);
     digitalWrite(ledPins[curr_station], LOW);
+    delay(100);
   }
 }

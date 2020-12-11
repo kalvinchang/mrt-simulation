@@ -15,6 +15,7 @@
 #define D6 1174.66
 #define E6 1318.51
 #define A7 3520
+#define BUZZER_CHANNEL 0
 
 #include <Tone32.h>
 
@@ -49,9 +50,8 @@ void enterStationTune(int speaker) {
   // adapted from https://www.arduino.cc/en/Tutorial/BuiltInExamples/toneMelody
   for (int i = 0; i < 40; i++) {
     double noteDuration = 1000 / durations[i];
-    tone(speaker, notes[i], noteDuration);
-    delay(noteDuration * 1.30);
-    noTone(speaker);
+    tone(speaker, notes[i], noteDuration, BUZZER_CHANNEL);
+    delay(noteDuration * 0.30);
   }
 }
 
@@ -59,24 +59,30 @@ void doorsClosing(int speaker) {
   // alarm sound
   double alarm = 4186.01;
   for (int i = 0; i < 13; i++) {
-    tone(speaker, alarm, 90);
-    delay(90 * 1.30);
-    noTone(speaker);
+    digitalWrite(ledPins[curr_station], HIGH);
+    tone(speaker, alarm, 90, BUZZER_CHANNEL);
+    digitalWrite(ledPins[curr_station], LOW);
+    delay(90 * 0.30);
   }
   delay(500);
   for (int i = 0; i < 13; i++) {
-    tone(speaker, alarm, 90);
-    delay(90 * 1.30);
-    noTone(speaker);
+    digitalWrite(ledPins[curr_station], HIGH);
+    tone(speaker, alarm, 90, BUZZER_CHANNEL);
+    digitalWrite(ledPins[curr_station], LOW);
+    delay(90 * 0.30);
   }
 
   delay(1000);
 
-  double doors[5] = {D6, F5, D6, F5, D6};
-  for (int i = 0; i < 5; i++) {
-    tone(speaker, doors[i], 600);
-    delay(600 * 1.30);
-    noTone(speaker);
+  double doors[7] = {D6, F5, D6, F5, D6, F5, D6};
+  for (int i = 0; i < 7; i++) {
+    if (i % 2 == 0) {
+      digitalWrite(ledPins[curr_station], HIGH);
+    } else {
+      digitalWrite(ledPins[curr_station], LOW);
+    }
+    tone(speaker, doors[i], 600, BUZZER_CHANNEL);
+    delay(600 * 0.30);
   }
 }
 

@@ -3,6 +3,7 @@
 #include "arduino_secrets.h"
 #include <tinyxml2.h>
 using namespace tinyxml2;
+#include <ArduinoJson.h>
 
 // adapted from https://github.com/CliffLin/TaipeiMRT/blob/master/flask/mrt.py (Flask)
 char serverAddress[] = "ws.metro.taipei";
@@ -11,11 +12,24 @@ WiFiClient wifi;
 HttpClient client = HttpClient(wifi, serverAddress, port);
 int status = WL_IDLE_STATUS;
 
+// station info
 const int APPROACHING_STATION = 30; // seconds
+const int NUM_STATIONS = 8;
+int curr_station = 2; // Zhongxiao Dunhua, corresponds to index in stations array
+extern JsonArray stations;
+
+// hardware info
+int speakerPin = 26;
+byte ledPins[NUM_STATIONS] = {27, 33, 32, 25, 2, 12, 13, 15};
 
 // WiFi code adapted from https://github.com/arduino-libraries/ArduinoHttpClient/blob/master/examples/SimplePost/SimplePost.ino
 void setup() {
   Serial.begin(230400);
+
+  for (int i = 0; i < NUM_STATIONS; i++) {
+    pinMode(ledPins[i], OUTPUT);
+  }
+  pinMode(speakerPin, OUTPUT);
   
   while (status != WL_CONNECTED) {
     Serial.println("Connecting to WiFi..");
@@ -28,7 +42,11 @@ void setup() {
 
 // adapted from https://github.com/arduino-libraries/ArduinoHttpClient/blob/master/examples/PostWithHeaders/PostWithHeaders.ino
 void loop() {
-	String station_id = "010";
+  Serial.println("Currently at station");
+  Serial.println((const char *)stations[curr_station]["english"]);
+	String station_id = stations[curr_station]["id"];
+  
+  digitalWrite(ledPins[curr_station], HIGH);
 
   Serial.println("Fetching data from API");
 
@@ -80,25 +98,34 @@ void loop() {
         int minutes = 0;
         int seconds = 0;
         sscanf(countdown, "%d:%d", &minutes, &seconds);
-        
+
         seconds += minutes * 60;
 
         if (seconds < APPROACHING_STATION) {
           // TODO: check that the train is on the Bannan line
           
           Serial.println("train arriving!");
-          // TODO: play music
+          flicker();
+          digitalWrite(ledPins[curr_station], HIGH); // turn light back on
+          enterStationTune(speakerPin); // takes 15 seconds
+
           // TODO: human speech: announce that a train is coming and headed toward some destination
           // TODO: human speech: mind the gap
-          // TODO: doesn't the song last a long time?
-          // TODO: wait 10 seconds for the doors to close (sound an alarm)
+          
+          delay(3000);
+          doorsClosing(speakerPin); // takes 9 seconds
           // TODO: human speech: doors closing
+          // TODO: make sure the door closing sequence takes at least 30 seconds!
 
+
+          // TODO: use the JSON to get the English name of the station
           const char *destination = "OOOOOOO";
           train->QueryStringAttribute("destination", &destination);
 
-          Serial.println("headed towards");
+          Serial.println("Platform 1 for ");
           Serial.println(destination);
+
+          break;
         }
         
         numTrains++;
@@ -112,4 +139,12 @@ void loop() {
   }
 
   delay(5000);
+}
+
+void flicker() {
+  for (int i = 0; i < 20; i++) {
+    digitalWrite(ledPins[curr_station], HIGH);
+    delay(100);
+    digitalWrite(ledPins[curr_station], LOW);
+  }
 }
